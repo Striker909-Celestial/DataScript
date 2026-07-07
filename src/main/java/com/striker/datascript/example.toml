@@ -1,0 +1,120 @@
+[import]
+# imports the function "foo" from "other.toml" and saves it as "import.other.function.foo"
+other.function.foo = "other.function.foo"
+
+# imports all functions and data from "other.toml" and saves them with their names in the file
+other."*" = "other.*"
+# DO NOT DO: other = "other" as this will also import the imports from "other.toml", which could potentially cause an infinite loop
+
+# imports the function "print" that has been passed into the compiler and saves it as "java.funnction.print"
+java.function.print = "@.function.print"
+
+[function.sum]
+args = {
+    # parameters a and b are set to 0 by default
+    a = 0,
+    b = 0
+}
+# args are treated as if they were defined directly in the function's structure
+# use the "$" prefix to reference a variable in a read-only form
+# if the variable referenced is modified, the refernce will update accordingly
+out = "$a + $b"
+# assigning a value to return will return that value from the function
+return = "$out"
+
+[function.do_something]
+args = {
+    a = 0,
+    b = 0,
+    # data is refenced from the file-wide hierachy as there is no "data" table at a lower level
+    bar = "$data.bar",
+    # sum can be referenced directly as it is in the same table, "fuunction", as do_something
+    bifunc = "$sum"
+}
+# a function is called by assigning a key to a dictionary with the keys "func" and "args"
+# the output of the function is then assigned to the key
+foo_out = {
+    # to reference an imported function, the import table must be referenced
+    run.func = "$import.other.function.foo",
+    run.args = {
+        # if any arguments are ommitted, the default values for those arguments are used instead
+        a = "$a",
+        b = "$b"
+    }
+    # args can also be passed as a list, which would look something like:
+    # args = [ "$a", "$b" ]
+    # args can also be omitted entirely, in which case the default args will be used
+}
+new_func = {
+    # lambda is a core function, so it does not need to be imported
+    # core functions cannot be overridden (i.e., if a variable "lambda" is created, referencing it as "$lambda" will instead refernce the core function lambda)
+    run.func = "$lambda",
+    run.args = {
+        # lambda's args are very similar to the default function call, however, lambda will return a function instead of an output from that function
+        func = "$bifunc",
+        # args change the default for any arg of the function to a certain value
+        args = {
+            a = "$foo_out"
+        }
+    }
+}
+nums = {
+    run.func = "$foreach",
+    run.args = {
+        iterable = "$bar.nums",
+        val_kw = "b",
+        func = "$new_func"
+    }
+}
+total = 0
+set_func = {
+    run.func = "$link",
+    run.args = {
+        # the "@" prefix returns a write-only form of the given variable
+        # this prefix can only be used for local variables, not data, imports, or functions
+        target = "@total",
+        # a function's output can be used directly as the arg of another function
+        func = {
+            run.func = "$lambda",
+            run.args = {
+                func = "$bifunc",
+                args = {
+                    a = "$total"
+                }
+            }
+        }
+    }
+}
+_ = {
+    run.func = "$foreach",
+    run.args = {
+        iterable = "$nums",
+        val_kw = "b",
+        func = "$set_func"
+    }
+}
+return = {
+    run.func = "$if",
+    run.args = {
+        condition = "$total >= 10",
+        then = "$bar.str",
+        else = {
+            run.func = "cast",
+            run.args = {
+                type = "string",
+                value = "$total"
+            }
+        }
+    }
+}
+
+[data.bar]
+# data can call functions, but they are only called once during initalization and cannot be stored as functions
+nums = {
+    run.func = "$range",
+    run.args = {
+        start = 0,
+        end = 10
+    }
+}
+str = "hello"
