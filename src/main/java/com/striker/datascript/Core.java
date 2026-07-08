@@ -202,4 +202,165 @@ public class Core {
                     Map.of("iterable", new ArrayList<>(), "target", "", "matcher", HASH_MATCHER)
             ))
     );
+
+    public static final Map<String, ScriptFunction<?>> OPERATORS = Map.ofEntries(
+            Map.entry("+", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return (double) a + (double) b; }
+                        if (a instanceof List) {
+                            if (b instanceof List) { ((List) a).addAll((List) b); }
+                            else { ((List) a).add(b); };
+                            return a;
+                        }
+                        if (b instanceof List) {
+                            ((List) b).addFirst(a);
+                            return b;
+                        }
+                        if (a instanceof Map && b instanceof Map) {
+                            ((Map) a).putAll((Map) b);
+                            return a;
+                        }
+                        return a.toString() + b.toString();
+                    },
+                    Map.of("a", 0, "b", 0)
+            )),
+            Map.entry("-", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return (double) a - (double) b; }
+                        if (a instanceof String && b instanceof String) { return ((String) a).replace((String) b, ""); }
+                        if (a instanceof Map && b instanceof String) { return ((Map) a).remove(b); }
+                        if (a instanceof List && b instanceof Number) { return ((List) a).remove((int) b); }
+                        return a.hashCode() - b.hashCode();
+                    },
+                    Map.of("a", 0, "b", 0)
+            )),
+            Map.entry("*", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return (double) a * (double) b; }
+                        if (a instanceof String && b instanceof Integer) { return ((String) a).repeat((int) b); }
+                        if (a instanceof List && b instanceof Integer) {
+                            List<Object> newList = new ArrayList<>();
+                            for (int i = 0; i < (int) b; i++) { newList.addAll((List) a); }
+                            return newList;
+                        }
+                        return a.hashCode() * b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("/", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return (double) a / (double) b; }
+                        return a.hashCode() / b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("%", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return (double) a % (double) b; }
+                        return a.hashCode() % b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("**", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Number && b instanceof Number) { return Math.pow((double) a,  (double) b); }
+                        return Math.pow(a.hashCode(), b.hashCode());
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("==", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        return a.equals(b);
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("!=", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        return !a.equals(b);
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry(">", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Comparable && b instanceof Comparable) { return ((Comparable) a).compareTo(b) > 0; }
+                        if (a instanceof Number && b instanceof Number) { return (double) a > (double) b; }
+                        return a.hashCode() > b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("<", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Comparable && b instanceof Comparable) { return ((Comparable) a).compareTo(b) < 0; }
+                        if (a instanceof Number && b instanceof Number) { return (double) a < (double) b; }
+                        return a.hashCode() < b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry(">=", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Comparable && b instanceof Comparable) { return ((Comparable) a).compareTo(b) >= 0; }
+                        if (a instanceof Number && b instanceof Number) { return (double) a >= (double) b; }
+                        return a.hashCode() >= b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("<=", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Comparable && b instanceof Comparable) { return ((Comparable) a).compareTo(b) <= 0; }
+                        if (a instanceof Number && b instanceof Number) { return (double) a <= (double) b; }
+                        return a.hashCode() <= b.hashCode();
+                    },
+                    Map.of("a", 1, "b", 1)
+            )),
+            Map.entry("&&", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Boolean && b instanceof Boolean) { return (boolean) a && (boolean) b; }
+                        return false;
+                    },
+                    Map.of("a", false, "b", false)
+            )),
+            Map.entry("||", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        var b = args.get("b");
+                        if (a instanceof Boolean && b instanceof Boolean) { return (boolean) a || (boolean) b; }
+                        return false;
+                    },
+                    Map.of("a", false, "b", false)
+            )),
+            Map.entry("!", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get("a");
+                        if (a instanceof Boolean) { return !(boolean) a ; }
+                        return false;
+                    },
+                    Map.of("a", false)
+            ))
+    );
 }
