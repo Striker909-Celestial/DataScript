@@ -1,10 +1,10 @@
 package com.striker.datascript;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Core {
 
@@ -363,4 +363,27 @@ public class Core {
                     Map.of("a", false)
             ))
     );
+    
+    public static final LinkedHashMap<String, Pattern> OPERATOR_PATTERNS = Stream.of(
+            Map.entry("+",   Pattern.compile("(.*\\S)\\s*\\+\\s*(\\S.*)")),
+            Map.entry("-",   Pattern.compile("(.*\\S)\\s*-\\s*(\\S.*)")),
+            Map.entry("*",   Pattern.compile("(.*[^\\s*])\\s*\\*\\s*([^\\s*].*)")),
+            Map.entry("/",   Pattern.compile("(.*\\S)\\s*/\\s*(\\S.*)")),
+            Map.entry("%",   Pattern.compile("(.*\\S)\\s*%\\s*(\\S.*)")),
+            Map.entry("**",  Pattern.compile("(.*\\S)\\s*\\*\\*\\s*(\\S.*)")),
+            Map.entry("==",  Pattern.compile("(.*\\S)\\s*==\\s*(\\S.*)")),
+            Map.entry("!=",  Pattern.compile("(.*\\S)\\s*!=\\s*(\\S.*)")),
+            Map.entry(">",   Pattern.compile("(.*\\S)\\s*>\\s*([^\\s=].*)")),
+            Map.entry("<",   Pattern.compile("(.*\\S)\\s*<\\s*([^\\s=].*)")),
+            Map.entry(">=",  Pattern.compile("(.*\\S)\\s*>=\\s*(\\S.*)")),
+            Map.entry("<=",  Pattern.compile("(.*\\S)\\s*<=\\s*(\\S.*)")),
+            Map.entry("&&",  Pattern.compile("(.*\\S)\\s*&&\\s*(\\S.*)")),
+            Map.entry("||",  Pattern.compile("(.*\\S)\\s*\\|\\|\\s*(\\S.*)")),
+            Map.entry("!",   Pattern.compile("!\\s*([^\\s=].*)"))
+    ).collect(Collectors.toMap(
+            Map.Entry::getKey,
+            Map.Entry::getValue,
+            (oldValue, newValue) -> oldValue,
+            LinkedHashMap::new
+    ));
 }

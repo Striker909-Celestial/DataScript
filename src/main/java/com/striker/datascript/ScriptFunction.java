@@ -1,6 +1,7 @@
 package com.striker.datascript;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -39,6 +40,17 @@ public class ScriptFunction<T> {
     public T apply(Map<String, Object> args) {
         Map<String, Object> newArgs = this.applyArgs(args);
         return function.apply(newArgs);
+    }
+
+    public T apply(List<Object> args) {
+        Map<String, Object> newArgs = new HashMap<>();
+        int i = 0;
+        for (String key : defaults.keySet()) {
+            if (i >= args.size()) { break; }
+            newArgs.put(key, args.get(i));
+            i++;
+        }
+        return apply(newArgs);
     }
 
     public T apply() {
