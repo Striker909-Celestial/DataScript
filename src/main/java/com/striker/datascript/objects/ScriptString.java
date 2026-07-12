@@ -1,4 +1,6 @@
-package com.striker.datascript;
+package com.striker.datascript.objects;
+import com.striker.datascript.Core;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -8,7 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class ScriptString {
+public class ScriptString implements ScriptObject<Object> {
+
+    public static final ScriptString EMPTY = new ScriptString("");
 
     private static int idNum = 0;
 
@@ -33,10 +37,10 @@ public class ScriptString {
     private final int id;
     public final String str;
     private final Type type;
-    private final Function<String, Supplier<Object>> context;
-    private final Supplier<Object> supplier;
+    private final Function<String, Supplier<ScriptObject<?>>> context;
+    private final Supplier<?> supplier;
 
-    public ScriptString(String str, Function<String, Supplier<Object>> context) {
+    public ScriptString(String str, Function<String, Supplier<ScriptObject<?>>> context) {
         this.id = idNum++;
         this.str = str;
         this.insertMatcher = INSERT_PATTERN.matcher(str);
@@ -47,12 +51,25 @@ public class ScriptString {
 
         this.context = context;
         this.supplier = switch (type) {
-            case REFERENCE -> this.context.apply(this.insertMatcher.group(1));
+            case REFERENCE -> () -> this.context.apply(this.insertMatcher.group(1)).get().get();
             case PLAINTEXT -> () -> this.str;
             case FTEXT -> buildFTextSupplier();
             case FUNCTION -> buildFunctionSupplier();
             default -> () -> null;
         };
+    }
+
+    public ScriptString(String str) {
+        this.id = idNum++;
+        this.str = str;
+        this.insertMatcher = INSERT_PATTERN.matcher(str);
+        this.parentheticalMatcher = PARENTHETICAL_PATTERN.matcher(str);
+        this.referenceMatcher = REFERENCE_PATTERN.matcher(str);
+        this.mutMatcher = MUT_PATTERN.matcher(str);
+        this.type = Type.PLAINTEXT;
+
+        this.context = s -> null;
+        this.supplier = () -> this.str;
     }
 
     private Type detectType() {
@@ -65,7 +82,7 @@ public class ScriptString {
         return Type.ERROR;
     }
 
-    private Supplier<Object> buildFTextSupplier() {
+    private Supplier<?> buildFTextSupplier() {
         List<MatchResult> inserts = this.insertMatcher.results().toList();
         ArrayList<ScriptString> strings = new ArrayList<>();
         if (inserts.getFirst().start() != 0) { strings.add(new ScriptString(str.substring(0, inserts.getFirst().start()), context)); }
@@ -80,7 +97,7 @@ public class ScriptString {
         };
     }
 
-    private Supplier<Object> buildFunctionSupplier() {
+    private Supplier<?> buildFunctionSupplier() {
         List<MatchResult> parentheticals = this.parentheticalMatcher.results().toList();
         String newStr = str;
         List<ScriptString> parentheticalResults = new ArrayList<>();
@@ -91,11 +108,11 @@ public class ScriptString {
         }
 
         Pattern parentheicalRefPattern = Pattern.compile("\\$\\[" + this.id + "~(\\d)]");
-        Function<String, Supplier<Object>> newContext = s -> {
-            if (parentheicalRefPattern.matcher(s).find()) {
-                return parentheticalResults.get(Integer.parseInt(parentheicalRefPattern.matcher(s).group(1)))::get;
+        Function<String, Supplier<ScriptObject<?>>> newContext = s -> {
+            if (parentheicalRefPattern.matcher(s).matches()) {
+                return () -> parentheticalResults.get(Integer.parseInt(parentheicalRefPattern.matcher(s).group(1)));
             }
-            return context.apply(s);
+            return () -> context.apply(s).get();
         };
 
         for (String operator : Core.OPERATORS.keySet()) {
@@ -108,7 +125,7 @@ public class ScriptString {
                 }
                 return () -> {
                     try {
-                        return Core.OPERATORS.get(operator).apply(args.stream().map(ScriptString::get).collect(Collectors.toList()));
+                        return Core.OPERATORS.get(operator).apply(new ScriptArray(new ArrayList<>(args)));
                     } catch (Exception e) {
                         return null;
                     }
@@ -118,5 +135,19 @@ public class ScriptString {
         return null;
     }
 
+    public Supplier<Object> supplier() { return supplier::get; }
     public Object get() { return supplier.get(); }
+    public double comparisonNumber() {
+        ScriptObject<?> output = ScriptObject.of(this.get());
+        if (output == null) { return 0; }
+        if (ScriptObject.matchType(output, EMPTY)) {
+            String s = output.get().toString();
+            double num = s.length();
+            for (int i = (int) num; i > 0; i--) {
+                num += 0.01 * i * (double) s.charAt(s.length() - i);
+            }
+            return num;
+        }
+        return output.comparisonNumber();
+    }
 }
