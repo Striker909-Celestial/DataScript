@@ -5,18 +5,16 @@ import java.util.function.Supplier;
 
 public class MutableScriptObject implements ScriptObject<Consumer<ScriptObject<?>>> {
 
-    public static final MutableScriptObject DUMMY = new MutableScriptObject(value -> {});
+    public static final MutableScriptObject DUMMY = new MutableScriptObject(() -> (value -> {}));
 
-    private final Consumer<ScriptObject<?>> consumer;
-    private final Supplier<Consumer<ScriptObject<?>>> supplier;
+    private Supplier<Consumer<ScriptObject<?>>> supplier;
 
-    public MutableScriptObject(Consumer<ScriptObject<?>> value) {
-        this.consumer = value;
-        this.supplier = () -> this.consumer;
-    }
+    public MutableScriptObject(Supplier<Consumer<ScriptObject<?>>> supplier) { this.supplier = supplier; }
+    public MutableScriptObject(Consumer<ScriptObject<?>> consumer) { this.supplier = () -> consumer; }
 
     public Supplier<Consumer<ScriptObject<?>>> supplier() { return supplier; }
-    public Consumer<ScriptObject<?>> get() { return consumer; }
+    public void setSupplier(Supplier<?> supplier) { this.supplier = () -> (Consumer<ScriptObject<?>>) supplier.get(); }
+    public Consumer<ScriptObject<?>> get() { return supplier.get(); }
     public double comparisonNumber() { return 0; }
-    public void accept(ScriptObject<?> value) { consumer.accept(value); }
+    public void accept(ScriptObject<?> value) { supplier.get().accept(value); }
 }

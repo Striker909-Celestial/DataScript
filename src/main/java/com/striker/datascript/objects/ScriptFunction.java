@@ -15,23 +15,23 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
     public static ScriptFunction<ScriptArray> DUMMY_ARRAY = new ScriptFunction<>(args -> ScriptArray.EMPTY, ScriptStructure.EMPTY);
     public static ScriptFunction<ScriptStructure> DUMMY_STRUCTURE = new ScriptFunction<>(args -> ScriptStructure.EMPTY, ScriptStructure.EMPTY);
 
-    private final Function<Map<String, ScriptObject<?>>, T> function;
+    private Supplier<Function<Map<String, ScriptObject<?>>, T>> function;
     private final ScriptStructure defaults;
     public final String docs;
 
     public ScriptFunction(Function<Map<String, ScriptObject<?>>, T> function, ScriptStructure defaults, String docs) {
-        this.function = function;
+        this.function = () -> function;
         this.defaults = defaults;
         this.docs = docs;
     }
     public ScriptFunction(Function<Map<String, ScriptObject<?>>, T> function, ScriptStructure defaults, ScriptString docs) {
-        this(function, defaults, docs.str);
+        this(function, defaults, docs.get().toString());
     }
     public ScriptFunction(Function<Map<String, ScriptObject<?>>, T> function, ScriptStructure defaults) {
         this(function, defaults, "");
     }
     public ScriptFunction() {
-        this.function = args -> null;
+        this.function = () -> (args -> null);
         this.defaults = null;
         this.docs = "";
     }
@@ -57,7 +57,7 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
 
     private T apply(Map<String, ScriptObject<?>> args) {
         Map<String, ScriptObject<?>> newArgs = this.applyArgs(args);
-        return function.apply(newArgs);
+        return function.get().apply(newArgs);
     }
 
     public T apply(ScriptStructure args) {
@@ -86,9 +86,9 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
     }
 
     public ScriptFunction<T> updateDefaults(ScriptStructure args) {
-        if (this.defaults == null) { return new ScriptFunction<>(function, args); }
+        if (this.defaults == null) { return new ScriptFunction<>(function.get(), args); }
         Map<String, ScriptObject<?>> newDefaults = this.applyArgs(args);
-        return new ScriptFunction<>(function, new ScriptStructure(newDefaults));
+        return new ScriptFunction<>(function.get(), new ScriptStructure(newDefaults));
     }
 
     public ScriptFunction<T> link(MutableScriptObject target) {
@@ -102,7 +102,8 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
         );
     }
 
-    public Supplier<Function<Map<String, ScriptObject<?>>, T>> supplier() { return () -> this.function; }
-    public Function<Map<String, ScriptObject<?>>, T> get() { return function; }
+    public Supplier<Function<Map<String, ScriptObject<?>>, T>> supplier() { return this.function; }
+    public void setSupplier(Supplier<?> supplier) { this.function = () -> (Function<Map<String, ScriptObject<?>>, T>) supplier.get(); }
+    public Function<Map<String, ScriptObject<?>>, T> get() { return function.get(); }
     public double comparisonNumber() { return 0; }
 }

@@ -7,15 +7,13 @@ public class ScriptBoolean implements ScriptObject<Boolean> {
     public static final ScriptBoolean TRUE = new ScriptBoolean(true);
     public static final ScriptBoolean FALSE = new ScriptBoolean(false);
 
-    private final boolean value;
-    private final Supplier<Boolean> supplier;
+    private Supplier<Boolean> supplier;
 
-    public ScriptBoolean(boolean value) {
-        this.value = value;
-        this.supplier = () -> this.value;
-    }
+    public ScriptBoolean(boolean value) { this.supplier = () -> value; }
+    public ScriptBoolean(Supplier<Boolean> supplier) { this.supplier = supplier; }
 
     public Supplier<Boolean> supplier() { return supplier; }
-    public Boolean get() { return value; }
-    public double comparisonNumber() { return value ? 1 : 0; }
+    public void setSupplier(Supplier<?> supplier) { this.supplier = () -> (boolean) supplier.get(); }
+    public Boolean get() { return supplier.get(); }
+    public double comparisonNumber() { return get() ? 1 : 0; }
 }

@@ -7,18 +7,15 @@ public class ScriptArray implements ScriptObject<List<ScriptObject<?>>> {
 
     public static final ScriptArray EMPTY = new ScriptArray(List.of());
 
-    private final List<ScriptObject<?>> array;
-    private final Supplier<List<ScriptObject<?>>> supplier;
+    private Supplier<List<ScriptObject<?>>> supplier;
 
-    public ScriptArray(List<ScriptObject<?>> value) {
-        this.array = value;
-        this.supplier = () -> this.array;
-    }
+    public ScriptArray(List<ScriptObject<?>> value) { this.supplier = () -> value; }
 
     public Supplier<List<ScriptObject<?>>> supplier() { return supplier; }
-    public List<ScriptObject<?>> get() { return array; }
-    public ScriptObject<?> get(int index) { return array.get(index); }
-    public int size() { return array.size(); }
+    public void setSupplier(Supplier<?> supplier) { this.supplier = () -> (List<ScriptObject<?>>) supplier.get(); }
+    public List<ScriptObject<?>> get() { return supplier.get(); }
+    public ScriptObject<?> get(int index) { return get().get(index); }
+    public int size() { return get().size(); }
     public double comparisonNumber() {
         double num = size();
         for (int i = 0; i < size(); i++) {

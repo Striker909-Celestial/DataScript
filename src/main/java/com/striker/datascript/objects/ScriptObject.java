@@ -12,12 +12,15 @@ public interface ScriptObject<T> {
         @Override
         public Supplier<Object> supplier() { return () -> null; }
         @Override
+        public void setSupplier(Supplier<?> supplier) {}
+        @Override
         public Object get() { return null; }
         @Override
         public double comparisonNumber() { return 0; }
     };
 
     Supplier<T> supplier();
+    void setSupplier(Supplier<?> supplier);
     T get();
     double comparisonNumber();
 
