@@ -113,7 +113,6 @@ return = {
 nums = {
     run.func = "$range",
     run.args = {
-        start = 0,
         end = 10
     }
 }

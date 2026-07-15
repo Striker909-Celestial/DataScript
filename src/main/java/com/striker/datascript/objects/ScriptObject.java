@@ -27,6 +27,12 @@ public interface ScriptObject<T> {
     static ScriptObject<?> of(Object value) {
         return switch (value) {
             case ScriptObject<?> obj -> obj;
+            case Supplier<?> supplier -> {
+                ScriptObject<?> output = of(supplier.get());
+                assert output != null;
+                output.setSupplier(supplier);
+                yield output;
+            }
             case String string -> new ScriptString(string);
             case Number number -> new ScriptNumber(number.doubleValue());
             case Boolean bool -> new ScriptBoolean(bool);
