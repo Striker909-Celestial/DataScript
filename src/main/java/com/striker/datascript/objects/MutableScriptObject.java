@@ -17,4 +17,5 @@ public class MutableScriptObject implements ScriptObject<Consumer<ScriptObject<?
     public Consumer<ScriptObject<?>> get() { return supplier.get(); }
     public double comparisonNumber() { return 0; }
     public void accept(ScriptObject<?> value) { supplier.get().accept(value); }
+    public String toString() { return get().toString(); }
 }

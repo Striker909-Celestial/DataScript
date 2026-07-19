@@ -16,4 +16,5 @@ public class ScriptBoolean implements ScriptObject<Boolean> {
     public void setSupplier(Supplier<?> supplier) { this.supplier = () -> (boolean) supplier.get(); }
     public Boolean get() { return supplier.get(); }
     public double comparisonNumber() { return get() ? 1 : 0; }
+    public String toString() { return get().toString(); }
 }

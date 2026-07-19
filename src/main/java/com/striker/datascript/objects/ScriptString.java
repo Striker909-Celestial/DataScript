@@ -2,7 +2,10 @@ package com.striker.datascript.objects;
 import com.striker.datascript.Core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
@@ -19,6 +22,7 @@ public class ScriptString implements ScriptObject<Object> {
         PLAINTEXT,
         FTEXT,
         REFERENCE,
+        MUT_REFERENCE,
         FUNCTION,
         ERROR
     }
@@ -36,42 +40,47 @@ public class ScriptString implements ScriptObject<Object> {
     private final int id;
     public Supplier<String> strSupplier;
     private Type type;
+    private boolean isText;
     private final Function<String, Supplier<ScriptObject<?>>> context;
-    private final Supplier<?> supplier;
+    private Supplier<?> supplier;
 
     public ScriptString(String str, Function<String, Supplier<ScriptObject<?>>> context) {
         this.id = idNum++;
-        this.setSupplier(() -> str);
-
         this.context = context;
-        this.supplier = switch (type) {
-            case REFERENCE -> this.context.apply(this.insertMatcher.group(1)).get().supplier();
-            case FTEXT -> buildFTextSupplier();
-            case FUNCTION -> buildFunctionSupplier();
-            default -> this.strSupplier;
-        };
+        this.setSupplier(() -> str);
     }
 
     public ScriptString(String str) {
         this.id = idNum++;
+        this.context = null;
         this.setSupplier(() -> str);
-        this.type = Type.PLAINTEXT;
-
-        this.context = s -> null;
-        this.supplier = this.strSupplier;
     }
 
     private Type detectType() {
-        if (insertMatcher.find()) { return Type.FTEXT; }
-        if (!(referenceMatcher.find() || mutMatcher.find())) { return Type.PLAINTEXT; }
-        if (referenceMatcher.results().count() + mutMatcher.results().count() == 1) { return Type.REFERENCE; }
+        if (insertMatcher.find()) {
+            insertMatcher.reset();
+            return Type.FTEXT;
+        }
+        long rCount = referenceMatcher.results().count();
+        long mCount = mutMatcher.results().count();
+        referenceMatcher.reset(); mutMatcher.reset();
+
+        if (rCount + mCount == 0) { return Type.PLAINTEXT; }
+        if (rCount + mCount == 1) {
+            if (referenceMatcher.find()) {
+                referenceMatcher.reset();
+                return Type.REFERENCE;
+            }
+            referenceMatcher.reset();
+            return Type.MUT_REFERENCE;
+        }
         for (String operator : Core.OPERATORS.keySet()) {
             if (str().contains(operator)) { return Type.FUNCTION; }
         }
         return Type.ERROR;
     }
 
-    private Supplier<?> buildFTextSupplier() {
+    private Supplier<String> buildFTextSupplier() {
         List<MatchResult> inserts = this.insertMatcher.results().toList();
         ArrayList<Supplier<Object>> strings = new ArrayList<>();
         if (inserts.getFirst().start() != 0) { strings.add(new ScriptString(str().substring(0, inserts.getFirst().start()), context).supplier()); }
@@ -86,36 +95,43 @@ public class ScriptString implements ScriptObject<Object> {
         };
     }
 
-    private Supplier<?> buildFunctionSupplier() {
+    private Supplier<ScriptObject<?>> buildFunctionSupplier() {
         List<MatchResult> parentheticals = this.parentheticalMatcher.results().toList();
+        this.parentheticalMatcher.reset();
         String newStr = str();
         List<ScriptString> parentheticalResults = new ArrayList<>();
         for (int i = 0; i < parentheticals.size(); i++) {
             String parenthetical = parentheticals.get(i).group(1);
-            newStr = newStr.replace(parenthetical, "$[" + this.id + "~" + i + "]");
+            newStr = newStr.replace("(" + parenthetical + ")", "$[" + this.id + "~" + i + "]");
             parentheticalResults.add(new ScriptString(parenthetical, context));
         }
 
         Pattern parentheicalRefPattern = Pattern.compile("\\$\\[" + this.id + "~(\\d)]");
         Function<String, Supplier<ScriptObject<?>>> newContext = s -> {
-            if (parentheicalRefPattern.matcher(s).matches()) {
-                return () -> parentheticalResults.get(Integer.parseInt(parentheicalRefPattern.matcher(s).group(1)));
+            Matcher matcher = parentheicalRefPattern.matcher(s);
+            if (matcher.matches()) {
+                return () -> ScriptObject.of(parentheticalResults.get(Integer.parseInt(matcher.group(1))).get());
             }
-            return () -> context.apply(s).get();
+            return context.apply(s);
         };
 
-        for (String operator : Core.OPERATORS.keySet()) {
+        for (String operator : Core.OPERATOR_SYMBOLS) {
             Matcher matcher = Core.OPERATOR_PATTERNS.get(operator).matcher(newStr);
             if (matcher.find()) {
                 int numGroups = matcher.groupCount();
-                List<ScriptString> args = new ArrayList<>();
+                List<ScriptObject<?>> args = new ArrayList<>();
                 for (int i = 1; i <= numGroups; i++) {
                     args.add(new ScriptString(matcher.group(i), newContext));
                 }
                 return () -> {
                     try {
-                        return Core.OPERATORS.get(operator).apply(new ScriptArray(new ArrayList<>(args))).get();
+                        Map<String, ScriptObject<?>> newArgs = new HashMap<>();
+                        for (int i = 0; i < args.size(); i++) {
+                            newArgs.put(Core.OPERATOR_ARG_KEYWORDS[i], ScriptObject.of(args.get(i).get()));
+                        }
+                        return Core.OPERATORS.get(operator).apply(new ScriptStructure(newArgs));
                     } catch (Exception e) {
+                        e.printStackTrace();
                         return null;
                     }
                 };
@@ -125,6 +141,7 @@ public class ScriptString implements ScriptObject<Object> {
     }
 
     private String str() { return strSupplier.get(); }
+    public boolean isText() { return isText; }
 
     public Supplier<Object> supplier() { return supplier::get; }
     public void setSupplier(Supplier<?> supplier) {
@@ -133,9 +150,31 @@ public class ScriptString implements ScriptObject<Object> {
         this.parentheticalMatcher = PARENTHETICAL_PATTERN.matcher(str());
         this.referenceMatcher = REFERENCE_PATTERN.matcher(str());
         this.mutMatcher = MUT_PATTERN.matcher(str());
-        this.type = detectType();
+
+        if (this.context != null) { this.type = detectType(); }
+        else { this.type = Type.PLAINTEXT; }
+        this.supplier = switch (type) {
+            case REFERENCE -> {
+                this.referenceMatcher.find();
+                String reference = this.referenceMatcher.group(1);
+                var coreResult = Core.context(reference);
+                if (coreResult != null) { yield coreResult; }
+                yield this.context.apply(reference);
+            }
+            case MUT_REFERENCE -> {
+                this.mutMatcher.find();
+                yield this.context.apply(this.mutMatcher.group(1));
+            }
+            case FTEXT -> buildFTextSupplier();
+            case FUNCTION -> buildFunctionSupplier();
+            default -> this.strSupplier;
+        };
+        this.isText = type == Type.PLAINTEXT || type == Type.FTEXT;
     }
-    public Object get() { return supplier.get(); }
+    public Object get() {
+        var obj = supplier.get();
+        return obj;
+    }
     public double comparisonNumber() {
         var output = this.get();
         if (output instanceof String s) {
@@ -150,4 +189,5 @@ public class ScriptString implements ScriptObject<Object> {
 
         return outputObj.comparisonNumber();
     }
+    public String toString() { return this.get().toString(); }
 }

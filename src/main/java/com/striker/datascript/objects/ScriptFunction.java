@@ -42,7 +42,7 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
         if (this.defaults == null) { return args; }
         Map<String, ScriptObject<?>> newArgs = new HashMap<>(args);
         for (String key : this.defaults.data().keySet()) {
-            if (defaults.data().containsKey(key)) {
+            if (args.containsKey(key)) {
                 newArgs.put(key, args.get(key));
             } else {
                 newArgs.put(key, this.defaults.data().get(key));
@@ -106,4 +106,5 @@ public class ScriptFunction<T extends ScriptObject<?>> implements ScriptObject<F
     public void setSupplier(Supplier<?> supplier) { this.function = () -> (Function<Map<String, ScriptObject<?>>, T>) supplier.get(); }
     public Function<Map<String, ScriptObject<?>>, T> get() { return function.get(); }
     public double comparisonNumber() { return 0; }
+    public String toString() { return get().toString(); }
 }

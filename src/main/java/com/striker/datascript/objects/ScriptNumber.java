@@ -16,4 +16,5 @@ public class ScriptNumber implements ScriptObject<Double> {
     public void setSupplier(Supplier<?> supplier) { this.supplier = () -> (double) supplier.get(); }
     public Double get() { return supplier.get(); }
     public double comparisonNumber() { return get(); }
+    public String toString() { return get().toString(); }
 }

@@ -23,4 +23,5 @@ public class ScriptArray implements ScriptObject<List<ScriptObject<?>>> {
         }
         return num;
     }
+    public String toString() { return get().toString(); }
 }

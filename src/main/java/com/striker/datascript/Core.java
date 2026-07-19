@@ -215,7 +215,7 @@ public class Core {
                             ScriptObject.assertType(args.get("end"), ScriptNumber.ZERO),
                             ScriptObject.assertType(args.get("step"), ScriptNumber.ZERO)
                     ),
-                    new ScriptStructure(Map.of("start", ScriptNumber.ZERO, "end", ScriptNumber.ZERO, "step", new ScriptNumber(1)))
+                    new ScriptStructure(Map.of("start", ScriptNumber.ZERO, "end", ScriptNumber.ZERO, "step", ScriptNumber.ONE))
             )),
             Map.entry("len", new ScriptFunction<>(
                     args -> {
@@ -255,13 +255,16 @@ public class Core {
         return null;
     }
 
+    public static final String[] OPERATOR_ARG_KEYWORDS = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
+    public static final String[] OPERATOR_SYMBOLS = { "+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", ">", "<=", ">=", "&&", "||", "!"};
+
     public static final Map<String, ScriptFunction<?>> OPERATORS = Map.ofEntries(
             Map.entry("+", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            ScriptObject.of(ScriptObject.assertType(a, ScriptNumber.ZERO).get() + ScriptObject.assertType(b, ScriptNumber.ZERO).get());
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return ScriptObject.of(aNum.get() + bNum.get());
                         }
                         if (ScriptObject.matchType(a, ScriptString.EMPTY) && ScriptObject.matchType(b, ScriptString.EMPTY)) {
                             return ScriptObject.of(ScriptObject.assertType(a, ScriptString.EMPTY).get().toString() + ScriptObject.assertType(b, ScriptString.EMPTY).get().toString());
@@ -287,14 +290,14 @@ public class Core {
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ZERO, "b", ScriptNumber.ZERO))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ZERO, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ZERO))
             )),
             Map.entry("-", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return ScriptObject.of(ScriptObject.assertType(a, ScriptNumber.ZERO).get() - ScriptObject.assertType(b, ScriptNumber.ZERO).get());
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return ScriptObject.of(aNum.get() - bNum.get());
                         }
                         if (ScriptObject.matchType(a, ScriptString.EMPTY) && ScriptObject.matchType(b, ScriptString.EMPTY)) {
                             return ScriptObject.of((ScriptObject.assertType(a, ScriptString.EMPTY).get().toString()).replace(ScriptObject.assertType(b, ScriptString.EMPTY).get().toString(), ""));
@@ -304,144 +307,155 @@ public class Core {
                             newMap.remove(ScriptObject.assertType(b, ScriptString.EMPTY).get().toString());
                             return new ScriptStructure(newMap);
                         }
-                        if (ScriptObject.matchType(a, ScriptArray.EMPTY) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
+                        if (ScriptObject.matchType(a, ScriptArray.EMPTY) && b instanceof ScriptNumber bNum) {
                             List<ScriptObject<?>> newList = new ArrayList<>(ScriptObject.assertType(a, ScriptArray.EMPTY).get());
-                            newList.remove(ScriptObject.assertType(b, ScriptNumber.ZERO).get().intValue());
+                            newList.remove(bNum.get().intValue());
                             return new ScriptArray(newList);
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ZERO, "b", ScriptNumber.ZERO))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ZERO, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ZERO))
             )),
             Map.entry("*", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return ScriptObject.of(ScriptObject.assertType(a, ScriptNumber.ZERO).get() * ScriptObject.assertType(b, ScriptNumber.ZERO).get());
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return ScriptObject.of(aNum.get() * bNum.get());
                         }
-                        if (ScriptObject.matchType(a, ScriptString.EMPTY) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return ScriptObject.of((ScriptObject.assertType(a, ScriptString.EMPTY).get().toString()).repeat(ScriptObject.assertType(b, ScriptNumber.ZERO).get().intValue()));
+                        if (ScriptObject.matchType(a, ScriptString.EMPTY) && b instanceof ScriptNumber bNum) {
+                            return ScriptObject.of((ScriptObject.assertType(a, ScriptString.EMPTY).get().toString()).repeat(bNum.get().intValue()));
                         }
-                        if (ScriptObject.matchType(a, ScriptArray.EMPTY) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
+                        if (ScriptObject.matchType(a, ScriptArray.EMPTY) && b instanceof ScriptNumber bNum) {
                             List<ScriptObject<?>> _a = ScriptObject.assertType(a, ScriptArray.EMPTY).get();
                             List<ScriptObject<?>> newList = new ArrayList<>();
-                            for (int i = 0; i < ScriptObject.assertType(b, ScriptNumber.ZERO).get().intValue(); i++) {
+                            for (int i = 0; i < bNum.get().intValue(); i++) {
                                 newList.addAll(_a);
                             }
                             return new ScriptArray(newList);
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("/", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return new ScriptNumber(ScriptObject.assertType(a, ScriptNumber.ZERO).get() / ScriptObject.assertType(b, ScriptNumber.ZERO).get());
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return new ScriptNumber(aNum.get() / bNum.get());
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
+            )),
+            Map.entry("//", new ScriptFunction<>(
+                    args -> {
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return new ScriptNumber((double) (aNum.get().intValue() / bNum.get().intValue()));
+                        }
+                        return null;
+                    },
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("%", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return new ScriptNumber(ScriptObject.assertType(a, ScriptNumber.ZERO).get() % ScriptObject.assertType(b, ScriptNumber.ZERO).get());
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return new ScriptNumber(aNum.get() % bNum.get());
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("**", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
-                        if (ScriptObject.matchType(a, ScriptNumber.ZERO) && ScriptObject.matchType(b, ScriptNumber.ZERO)) {
-                            return new ScriptNumber(Math.pow(ScriptObject.assertType(a, ScriptNumber.ZERO).get(), ScriptObject.assertType(b, ScriptNumber.ZERO).get()));
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
+                        if (a instanceof ScriptNumber aNum && b instanceof ScriptNumber bNum) {
+                            return new ScriptNumber(Math.pow(aNum.get(), bNum.get()));
                         }
                         return null;
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("==", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(a.get().equals(b.get()));
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("!=", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(!a.get().equals(b.get()));
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry(">", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(a.comparisonNumber() > b.comparisonNumber());
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("<", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(a.comparisonNumber() < b.comparisonNumber());
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry(">=", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         if (a.get().equals(b.get())) {
                             return ScriptBoolean.TRUE;
                         }
                         return new ScriptBoolean(a.comparisonNumber() > b.comparisonNumber());
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("<=", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         if (a.get().equals(b.get())) { return ScriptBoolean.TRUE; }
                         return new ScriptBoolean(a.comparisonNumber() < b.comparisonNumber());
                     },
-                    new ScriptStructure(Map.of("a", ScriptNumber.ONE, "b", ScriptNumber.ONE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptNumber.ONE, OPERATOR_ARG_KEYWORDS[1], ScriptNumber.ONE))
             )),
             Map.entry("&&", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(ScriptObject.assertType(a, ScriptBoolean.FALSE).get() && ScriptObject.assertType(b, ScriptBoolean.FALSE).get());
                     },
-                    new ScriptStructure(Map.of("a", ScriptBoolean.FALSE, "b", ScriptBoolean.FALSE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptBoolean.FALSE, OPERATOR_ARG_KEYWORDS[1], ScriptBoolean.FALSE))
             )),
             Map.entry("||", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
-                        var b = args.get("b");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
+                        var b = args.get(OPERATOR_ARG_KEYWORDS[1]);
                         return new ScriptBoolean(ScriptObject.assertType(a, ScriptBoolean.FALSE).get() || ScriptObject.assertType(b, ScriptBoolean.FALSE).get());
                     },
-                    new ScriptStructure(Map.of("a", ScriptBoolean.FALSE, "b", ScriptBoolean.FALSE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptBoolean.FALSE, OPERATOR_ARG_KEYWORDS[1], ScriptBoolean.FALSE))
             )),
             Map.entry("!", new ScriptFunction<>(
                     args -> {
-                        var a = args.get("a");
+                        var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
                         return new ScriptBoolean(!ScriptObject.assertType(a, ScriptBoolean.FALSE).get());
                     },
-                    new ScriptStructure(Map.of("a", ScriptBoolean.FALSE))
+                    new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptBoolean.FALSE))
             ))
     );
     
@@ -449,7 +463,8 @@ public class Core {
             Map.entry("+",   Pattern.compile("(.*\\S)\\s*\\+\\s*(\\S.*)")),
             Map.entry("-",   Pattern.compile("(.*\\S)\\s*-\\s*(\\S.*)")),
             Map.entry("*",   Pattern.compile("(.*[^\\s*])\\s*\\*\\s*([^\\s*].*)")),
-            Map.entry("/",   Pattern.compile("(.*\\S)\\s*/\\s*(\\S.*)")),
+            Map.entry("/",   Pattern.compile("(.*[^\\s/])\\s*/\\s*([^\\s/].*)")),
+            Map.entry("/",   Pattern.compile("(.*\\S)\\s*//\\s*(\\S.*)")),
             Map.entry("%",   Pattern.compile("(.*\\S)\\s*%\\s*(\\S.*)")),
             Map.entry("**",  Pattern.compile("(.*\\S)\\s*\\*\\*\\s*(\\S.*)")),
             Map.entry("==",  Pattern.compile("(.*\\S)\\s*==\\s*(\\S.*)")),
