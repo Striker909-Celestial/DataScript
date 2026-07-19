@@ -31,6 +31,7 @@ public class ScriptString implements ScriptObject<Object> {
     private final Pattern PARENTHETICAL_PATTERN = Pattern.compile("(?:^|[^\\\\])\\((.*[^\\\\])\\)");
     private final Pattern REFERENCE_PATTERN = Pattern.compile("(?:^|[^\\\\])(\\$\\S+)");
     private final Pattern MUT_PATTERN = Pattern.compile("(?:^|[^\\\\])(@\\S+)");
+    private final Pattern ESCAPE_PATTERN = Pattern.compile("\\\\([$@{}])");
 
     private Matcher insertMatcher;
     private Matcher parentheticalMatcher;
@@ -91,7 +92,8 @@ public class ScriptString implements ScriptObject<Object> {
         return () -> {
             StringBuilder builder = new StringBuilder();
             for (Supplier<Object> string : strings) { builder.append(string.get()); }
-            return builder.toString();
+            String output = builder.toString();
+            return ESCAPE_PATTERN.matcher(output).replaceAll(m -> m.group(1));
         };
     }
 
@@ -167,7 +169,7 @@ public class ScriptString implements ScriptObject<Object> {
             }
             case FTEXT -> buildFTextSupplier();
             case FUNCTION -> buildFunctionSupplier();
-            default -> this.strSupplier;
+            default -> () -> ESCAPE_PATTERN.matcher(strSupplier.get()).replaceAll(m -> m.group(1));
         };
         this.isText = type == Type.PLAINTEXT || type == Type.FTEXT;
     }
