@@ -107,7 +107,7 @@ public class Core {
     /// Each number is equal to the previous number plus the step.
     public static ScriptArray range(ScriptNumber start, ScriptNumber end, ScriptNumber step) {
         List<ScriptObject<?>> results = new ArrayList<>();
-        for (double i = start.get(); i < end.get(); i += step.get()) {
+        for (double i = start.get(); (step.get() > 0) ? i < end.get() : i > end.get(); i += step.get()) {
             results.add(new ScriptNumber(i));
         }
         return new ScriptArray(results);

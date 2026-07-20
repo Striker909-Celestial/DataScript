@@ -104,8 +104,11 @@ public class ScriptStructure implements ScriptObject<Object> {
                     throw new IllegalArgumentException("Function call structure must have a function as its 'func' child");
                 }
                 ScriptFunction<?> scriptFunction = ScriptObject.assertType(func, ScriptFunction.DUMMY);
-                ScriptStructure args = ScriptObject.assertType(this.get("$run.args"), ScriptStructure.EMPTY);
-                return scriptFunction.apply(args);
+                ScriptObject<?> argsObj = this.get("$run.args");
+                return switch (argsObj) {
+                    case ScriptStructure structure -> scriptFunction.apply(structure);
+                    default -> scriptFunction.apply();
+                };
             };
         }
         this.dataSupplier = () -> dataMap;
