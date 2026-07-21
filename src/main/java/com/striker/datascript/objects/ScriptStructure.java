@@ -33,8 +33,10 @@ public class ScriptStructure implements ScriptObject<Object> {
 
     private Type type = Type.DATA;
     private Supplier<Map<String, ScriptObject<?>>> dataSupplier;
-    private Map<String, ScriptObject<?>> passedArgs;
     private Supplier<?> supplier;
+
+    private Map<String, ScriptObject<?>> passedArgs;
+    private ScriptArray privateArgs;
 
     /// A ScriptStructure is the core building block of a DataScript program. At its most basic level, a ScriptStrucure acts as a map of other [ScriptObject]s.
     /// However, a ScriptStructure can also act as an import block, a function definition, or a function call.
@@ -96,8 +98,14 @@ public class ScriptStructure implements ScriptObject<Object> {
                 if (key.equals("lambda")) { continue; }
                 defaults.put(key, null);
             }
+
             String docs = this.get("$lambda.docs").get().toString();
             if (docs == null) { docs = ""; }
+
+            ScriptObject<?> priv = this.get("$lambda.private");
+            if (priv instanceof ScriptArray array) { privateArgs = array; }
+            else { privateArgs = new ScriptArray(List.of()); }
+
             ScriptFunction<?> scriptFunction = new ScriptFunction<>(function, new ScriptStructure(defaults), docs);
             this.supplier = () -> scriptFunction;
         } else if (this.type == Type.DATA && dataMap.containsKey("run")) { // if a "run" child exists, this is a function call structure
@@ -156,7 +164,11 @@ public class ScriptStructure implements ScriptObject<Object> {
         } // If reference is just "$", return the structure itself
 
         String[] split = reference.substring(1).split("\\.");
-        if (this.type == Type.LAMBDA && this.passedArgs != null && passedArgs.containsKey(split[0])) {
+        if (this.type == Type.LAMBDA &&
+                !split[0].equals("lambda") &&
+                this.passedArgs != null &&
+                passedArgs.containsKey(split[0]) &&
+                !this.privateArgs.get().contains(ScriptObject.of(split[0]))) {
             var arg = passedArgs.get(split[0]);
             if (arg != null) { return () -> arg; }
         }
