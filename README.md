@@ -6,7 +6,7 @@ TOML will be used for all DataScript examples in this README, but DataScript can
 
 DataScript is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
 
-Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.3.3` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
+Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.3.4` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
 
 ## DataScript Objects
 
@@ -32,7 +32,9 @@ Strings serve three main purposes: they can store text, but they can also refere
 
 #### Text Strings
 
-Text strings do what their name implies: they store text. The only real difference from strings in a normal file is that `$`, `@`, `{`, and `}` are considered special characters and thus must be escaped like `\\$`.
+Text strings do what their name implies: they store text. The only real difference from strings in a normal file is that some characters are considered special characters and thus must be escaped like `\\$`.
+
+> Special characters are: `$`, `@`, `{`, `}`, `+`, `-`, `*`, `/`, `%`, `=`, `!`, `<`, `>`, `&`, `|`
 
 #### Formatted Strings
 
@@ -326,6 +328,6 @@ In, referenced with `$in`, checks if an array or structure includes a given item
 
 ---
 
-> #### Last updated July 21st, 2026 for `v0.3.3`
+> #### Last updated July 21st, 2026 for `v0.3.4`
 
 TODO: Imports, Imports from Java

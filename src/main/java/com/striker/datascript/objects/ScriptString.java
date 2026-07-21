@@ -30,7 +30,7 @@ public class ScriptString implements ScriptObject<Object> {
     private final Pattern PARENTHETICAL_PATTERN = Pattern.compile("(?:^|[^\\\\])\\((.*[^\\\\])\\)");
     private final Pattern REFERENCE_PATTERN = Pattern.compile("(?:^|[^\\\\])(\\$\\S+)");
     private final Pattern MUT_PATTERN = Pattern.compile("(?:^|[^\\\\])(@\\S+)");
-    private final Pattern ESCAPE_PATTERN = Pattern.compile("\\\\([$@{}])");
+    private final Pattern ESCAPE_PATTERN = Pattern.compile("\\\\([$@{}+\\-*/%=!<>&|])");
 
     private Matcher insertMatcher;
     private Matcher parentheticalMatcher;
@@ -74,8 +74,8 @@ public class ScriptString implements ScriptObject<Object> {
             referenceMatcher.reset();
             return Type.MUT_REFERENCE;
         }
-        for (String operator : Core.OPERATORS.keySet()) {
-            if (str().contains(operator)) { return Type.OPERATIONAL; }
+        for (Pattern pattern : Core.OPERATOR_PATTERNS.values()) {
+        if (pattern.matcher(str()).find()) { return Type.OPERATIONAL; }
         }
         return Type.ERROR;
     }
@@ -156,14 +156,14 @@ public class ScriptString implements ScriptObject<Object> {
         else { this.type = Type.PLAINTEXT; }
         this.supplier = switch (type) {
             case REFERENCE -> {
-                this.referenceMatcher.find();
+                boolean found = this.referenceMatcher.find();
                 String reference = this.referenceMatcher.group(1);
                 var coreResult = Core.context(reference);
                 if (coreResult != null) { yield coreResult; }
                 yield this.context.apply(reference);
             }
             case MUT_REFERENCE -> {
-                this.mutMatcher.find();
+                boolean found = this.mutMatcher.find();
                 yield this.context.apply(this.mutMatcher.group(1));
             }
             case FTEXT -> buildFTextSupplier();
@@ -172,10 +172,8 @@ public class ScriptString implements ScriptObject<Object> {
         };
         this.isText = type == Type.PLAINTEXT || type == Type.FTEXT;
     }
-    public Object get() {
-        var obj = supplier.get();
-        return obj;
-    }
+    public Object get() { return supplier.get(); }
+
     public double comparisonNumber() {
         var output = this.get();
         if (output instanceof String s) {
