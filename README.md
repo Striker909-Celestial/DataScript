@@ -6,7 +6,7 @@ TOML will be used for all DataScript examples in this README, but DataScript can
 
 DataScript is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
 
-Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.3.4` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
+Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.4.0` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
 
 ## DataScript Objects
 
@@ -87,7 +87,7 @@ In addition to everything else they can do, strings can also be used for simple 
 > - If `a` and `b` are both numbers, sums them.
 > - If `a` and `b` are both strings, both arrays, or both structures, concats them.
 > - If `a` is an array returns a new array that is a copy of `a` with `b` appended to the end.
-> - - If `b` is an array returns a new array that is a copy of `b` with `a` appended to the front.
+> - If `b` is an array returns a new array that is a copy of `b` with `a` appended to the front.
 > 
 > #### `$a - $b`
 > 
@@ -328,6 +328,6 @@ In, referenced with `$in`, checks if an array or structure includes a given item
 
 ---
 
-> #### Last updated July 21st, 2026 for `v0.3.4`
+> #### Last updated July 21st, 2026 for `v0.4.0`
 
 TODO: Imports, Imports from Java

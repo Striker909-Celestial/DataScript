@@ -66,6 +66,11 @@ public class ScriptString implements ScriptObject<Object> {
         referenceMatcher.reset(); mutMatcher.reset();
 
         if (rCount + mCount == 0) { return Type.PLAINTEXT; }
+
+        for (Pattern pattern : Core.OPERATOR_PATTERNS.values()) {
+            if (pattern.matcher(str()).find()) { return Type.OPERATIONAL; }
+        }
+
         if (rCount + mCount == 1) {
             if (referenceMatcher.find()) {
                 referenceMatcher.reset();
@@ -73,9 +78,6 @@ public class ScriptString implements ScriptObject<Object> {
             }
             referenceMatcher.reset();
             return Type.MUT_REFERENCE;
-        }
-        for (Pattern pattern : Core.OPERATOR_PATTERNS.values()) {
-        if (pattern.matcher(str()).find()) { return Type.OPERATIONAL; }
         }
         return Type.ERROR;
     }

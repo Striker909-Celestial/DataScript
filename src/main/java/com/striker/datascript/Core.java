@@ -476,7 +476,8 @@ public class Core {
             Map.entry("!", new ScriptFunction<>(
                     args -> {
                         var a = args.get(OPERATOR_ARG_KEYWORDS[0]);
-                        return new ScriptBoolean(!ScriptObject.assertType(a, ScriptBoolean.FALSE).get());
+                        if (a instanceof ScriptBoolean bool) { return new ScriptBoolean(!bool.get()); }
+                        return ScriptBoolean.FALSE;
                     },
                     new ScriptStructure(Map.of(OPERATOR_ARG_KEYWORDS[0], ScriptBoolean.FALSE))
             ))
