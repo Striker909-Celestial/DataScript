@@ -487,7 +487,7 @@ public class Core {
             Map.entry("-",   Pattern.compile("(.*[^\\\\\\s])\\s*-\\s*(\\S.*)")),
             Map.entry("*",   Pattern.compile("(.*[^\\\\\\s*])\\s*\\*\\s*([^\\s*].*)")),
             Map.entry("/",   Pattern.compile("(.*[^\\\\\\s/])\\s*/\\s*([^\\s/].*)")),
-            Map.entry("/",   Pattern.compile("(.*[^\\\\\\s])\\s*//\\s*(\\S.*)")),
+            Map.entry("//",  Pattern.compile("(.*[^\\\\\\s])\\s*//\\s*(\\S.*)")),
             Map.entry("%",   Pattern.compile("(.*[^\\\\\\s])\\s*%\\s*(\\S.*)")),
             Map.entry("**",  Pattern.compile("(.*[^\\\\\\s])\\s*\\*\\*\\s*(\\S.*)")),
             Map.entry("==",  Pattern.compile("(.*[^\\\\\\s])\\s*==\\s*(\\S.*)")),
