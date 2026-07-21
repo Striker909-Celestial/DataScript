@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
@@ -23,7 +22,7 @@ public class ScriptString implements ScriptObject<Object> {
         FTEXT,
         REFERENCE,
         MUT_REFERENCE,
-        FUNCTION,
+        OPERATIONAL,
         ERROR
     }
 
@@ -76,7 +75,7 @@ public class ScriptString implements ScriptObject<Object> {
             return Type.MUT_REFERENCE;
         }
         for (String operator : Core.OPERATORS.keySet()) {
-            if (str().contains(operator)) { return Type.FUNCTION; }
+            if (str().contains(operator)) { return Type.OPERATIONAL; }
         }
         return Type.ERROR;
     }
@@ -97,7 +96,7 @@ public class ScriptString implements ScriptObject<Object> {
         };
     }
 
-    private Supplier<ScriptObject<?>> buildFunctionSupplier() {
+    private Supplier<ScriptObject<?>> buildOperationalSupplier() {
         List<MatchResult> parentheticals = this.parentheticalMatcher.results().toList();
         this.parentheticalMatcher.reset();
         String newStr = str();
@@ -168,7 +167,7 @@ public class ScriptString implements ScriptObject<Object> {
                 yield this.context.apply(this.mutMatcher.group(1));
             }
             case FTEXT -> buildFTextSupplier();
-            case FUNCTION -> buildFunctionSupplier();
+            case OPERATIONAL -> buildOperationalSupplier();
             default -> () -> ESCAPE_PATTERN.matcher(strSupplier.get()).replaceAll(m -> m.group(1));
         };
         this.isText = type == Type.PLAINTEXT || type == Type.FTEXT;

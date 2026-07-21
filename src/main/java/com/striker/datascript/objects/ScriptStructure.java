@@ -236,10 +236,8 @@ public class ScriptStructure implements ScriptObject<Object> {
     public int size() { return this.data().size(); }
     public double comparisonNumber() {
         double num = size();
-        int i = size();
         for (Map.Entry<String, ScriptObject<?>> entry : this.data().entrySet()) {
-            num += 0.01 * i * entry.getValue().comparisonNumber();
-            i--;
+            num += 0.01 * entry.getValue().comparisonNumber();
         }
         return num;
     }

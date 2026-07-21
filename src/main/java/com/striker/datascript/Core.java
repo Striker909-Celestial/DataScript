@@ -347,7 +347,7 @@ public class Core {
                             return ScriptObject.of(aNum.get() * bNum.get());
                         }
                         if (ScriptObject.matchType(a, ScriptString.EMPTY) && b instanceof ScriptNumber bNum) {
-                            return ScriptObject.of((ScriptObject.assertType(a, ScriptString.EMPTY).get().toString()).repeat(bNum.get().intValue()));
+                            return ScriptObject.of((ScriptObject.assertType(a, ScriptString.EMPTY).get().toString()).repeat(Math.max(0, bNum.get().intValue())));
                         }
                         if (ScriptObject.matchType(a, ScriptArray.EMPTY) && b instanceof ScriptNumber bNum) {
                             List<ScriptObject<?>> _a = ScriptObject.assertType(a, ScriptArray.EMPTY).get();

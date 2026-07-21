@@ -6,7 +6,7 @@ TOML will be used for all DataScript examples in this README, but DataScript can
 
 DataScript is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
 
-Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.3.2` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
+Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.3.3` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
 
 ## DataScript Objects
 
@@ -76,6 +76,91 @@ As `c` and `f`'s scope are separated, `f` must start the reference from the lowe
 
 Items in arrays can also be referenced by their indexes. For example, `$array.1` would reference the first item of the array. If an item was inserted at position 1, the reference would not switch to referencing that item, it would maintain its original reference even as the item referenced moves to index 2.
 
+### Operation Strings
+
+In addition to everything else they can do, strings can also be used for simple arithmetic, comparison, and boolean logic along with other simple operations. In-string operations will only operate on references (for example, `$a + $b` is valid but `$a + 2` is not). Order of operations and parentheticals are handled as expected.
+
+> #### `$a + $b`
+> 
+> - If `a` and `b` are both numbers, sums them.
+> - If `a` and `b` are both strings, both arrays, or both structures, concats them.
+> - If `a` is an array returns a new array that is a copy of `a` with `b` appended to the end.
+> - - If `b` is an array returns a new array that is a copy of `b` with `a` appended to the front.
+> 
+> #### `$a - $b`
+> 
+> - If `a` and `b` are both numbers, subtracts `b` from `a`.
+> - If `a` and `b` are both strings, removes all substrings from `a` that match `b`.
+> - If `a` is an array and `b` is a number, returns a copy of `a` with the item at index `b` removed.
+> - If `a` is a structure and `b` is a string, returns a copy of `a` with the key `b` removed.
+> 
+> #### `$a * $b`
+> 
+> - If `a` and `b` are both numbers, multiplies them.
+> - If `a` is a string or array and `b` is a number, returns `a` repeated `b` times (rounded down if `b` is not an integer, 0 if `b` is negative).
+>
+> #### `$a / $b`
+> 
+> - If `a` and `b` are both numbers, divides `a` by `b`.
+> 
+> #### `$a // $b`
+> 
+> - If `a` and `b` are both numbers, converts both to integers and divides `a` by `b` using integer division.
+> 
+> #### `$a % $b`
+> 
+> - If `a` and `b` are both numbers, returns `a` modulus `b`.
+> 
+> #### `$a ** $b`
+> 
+> - If `a` and `b` are both numbers, raises `a` to the power of `b`.
+> 
+> #### `$a == $b`
+> 
+>  Tests if `a` is equal to `b`.
+> 
+> #### `$a != $b`
+> 
+> Tests if `a` is not equal to `b`
+> 
+> #### `$a > $b`
+> 
+> Tests if `a` is "greater" than `b` using the comparison number system.
+>
+> #### `$a < $b`
+>
+> Tests if `a` is "less" than `b` using the comparison number system.
+>
+> #### `$a >= $b`
+>
+> Tests if `a` is "greater" than or equal to `b` using the comparison number system.
+>
+> #### `$a <= $b`
+>
+> Tests if `a` is "less" than or equal to `b` using the comparison number system.
+> 
+> #### `$a && $b`
+> 
+> - If `a` and `b` are both booleans, ands them.
+> 
+> #### `$a || $b`
+> 
+> - If `a` and `b` are both booleans, ors them.
+> 
+> #### `!$a`
+> 
+> - If `a` is a boolean, returns its inverse.
+
+### Comparison Numbers
+
+All data objects in DataScript are assigned a comparison number to allow for easy comparison.
+
+- For numbers, the comparison number is just equal to the number itself.
+- For booleans, the comparison number is 1 if true, 0 if false.
+- For strings, if `l` is the length of the string, `c` is the numerical value of the `i`th character and `n` is the comparison number, `n = l + 0.01 * Σ ((l - i) * c)`.
+- Arrays follow a similar formula to string, with `c` equal to the comparison number of the `i`th item in the array.
+- For structures, if `l` is the number of items in the structure, `c` is the comparison number of the `i`th item,and `n` is the comparison number, `n = l + 0.01 * Σ (c)`.
+
 ## Functions
 
 Functions are, of course, the most important element of any functional programming language. Functions can be referenced just like any data type. This fact is key both to allowing functions to be called and allowing for the functional mainstay of passing functions as parameters for other functions. 
@@ -139,7 +224,7 @@ DataScript has 8 core functions. These functions can be referenced directly with
 
 #### Link
 
-Link, referenced with `$link`, is the only core function that takes in an aargument with a `@` prefix. It transmutes a function by creating a copy of that function that will set a certain variable to the output of the function every time it is called. In java it would look something like:
+Link, referenced with `$link`, is the only core function that takes in an argument with a `@` prefix. It transmutes a function by creating a copy of that function that will set a certain variable to the output of the function every time it is called. In java it would look something like:
 
 ```java
 Function<?, ?> link(Consumer<?> target, Function<?, ?> func) {
@@ -203,7 +288,7 @@ If both `val_kw` and `key_kw` the key and value passed to the `func` indepedentl
 > 
 > **param** `key_kw`: The keyword to use when passing the key at each index of the `iterable` to the func.
 > 
-> **param** `func`: The function to run at eaach index of the `iterable`.
+> **param** `func`: The function to run at each index of the `iterable`.
 > 
 > **return**: An array or structure containing all results from the `func`.
 
@@ -214,8 +299,11 @@ Range, referenced with `$range`, creates an array of numbers with the first item
 If `end` is less than `start`, `step` must be negative.
 
 > **param** `start`: The first value in the array, 0 by default.
+> 
 > **param** `end`: The ending value of the range, exclusive.
+> 
 > **param** `step`: The difference between subsequent items in the array, 1 by default.
+> 
 > **return**: An array with values from `start` (inclusive) to `end` (exclusive) with a step size of `step`.
 
 #### Length
@@ -224,7 +312,7 @@ Length, referenced with `$len`, returns the number of items in a given array or 
 
 > **param** `iterable`: An array or structure.
 > 
-> **return**: The number of items in `iteraable`.
+> **return**: The number of items in `iterable`.
 
 #### In
 
@@ -238,6 +326,6 @@ In, referenced with `$in`, checks if an array or structure includes a given item
 
 ---
 
-> #### Last updated July 21st, 2026 for `v0.3.2`
+> #### Last updated July 21st, 2026 for `v0.3.3`
 
 TODO: Imports, Imports from Java
