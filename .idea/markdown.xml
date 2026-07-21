@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MarkdownSettings">
+    <option name="customStylesheetText" value="body {&#10;    background-color: #292831 !important;&#10;    color: #d8ded6 !important;&#10;}&#10;pre, code {&#10;    background-color: #2c2f3d !important;&#10;    color: #b1bdb2 !important;&#10;}&#10;blockquote {&#10;    background-color: #2c2f3d !important;&#10;    color: #d8ded6 !important;&#10;    border-left: 4px solid #3a3149 !important;&#10;}&#10;&#10;blockquote pre, blockquote code {&#10;    background-color: #292831 !important;&#10;}" />
+    <option name="useCustomStylesheetText" value="true" />
+  </component>
+</project>

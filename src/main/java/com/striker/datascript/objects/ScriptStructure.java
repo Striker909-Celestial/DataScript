@@ -23,7 +23,7 @@ public class ScriptStructure implements ScriptObject<Object> {
 
     private enum Type {
         FUNCTION_CALL,
-        FUNCTION,
+        LAMBDA,
         DATA,
         IMPORT,
     }
@@ -33,7 +33,7 @@ public class ScriptStructure implements ScriptObject<Object> {
 
     private Type type = Type.DATA;
     private Supplier<Map<String, ScriptObject<?>>> dataSupplier;
-    private Supplier<Map<String, ScriptObject<?>>> argsSupplier;
+    private Map<String, ScriptObject<?>> passedArgs;
     private Supplier<?> supplier;
 
     /// A ScriptStructure is the core building block of a DataScript program. At its most basic level, a ScriptStrucure acts as a map of other [ScriptObject]s.
@@ -60,8 +60,6 @@ public class ScriptStructure implements ScriptObject<Object> {
         if (splitPath.length >= 1 && splitPath[splitPath.length - 1].equals("import")) { // if the path ends with import, this is an import structure
             this.type = Type.IMPORT;
             //TODO: Implement imports
-        } else if (splitPath.length >= 2 && splitPath[splitPath.length - 2].equals("function")) { // if the path looks like "function.name", this is a function structure
-            this.type = Type.FUNCTION;
         }
 
         // the new context that is passed to script structures and strings that are children of this structure
@@ -85,15 +83,22 @@ public class ScriptStructure implements ScriptObject<Object> {
             dataMap.put(entry.getKey(), value);
         }
 
-        if (this.type == Type.FUNCTION) {
+        // If this structure contains a "lambda" child, it is a lambda function definition
+        if (this.type == Type.DATA && dataMap.containsKey("lambda")) {
             // defaults come from the args child structure if it exists
-            ScriptStructure defaults = this.data().containsKey("args") ? ScriptObject.assertType(this.get("$args"), ScriptStructure.EMPTY) : ScriptStructure.EMPTY;
+            this.type = Type.LAMBDA;
             Function<Map<String, ScriptObject<?>>, ScriptObject<?>> function = (args) -> {
-                argsSupplier = () -> args;
-                return this.supplier("return").get();
+                passedArgs = args;
+                return this.supplier("$lambda.return").get();
             };
-            String docs = this.data().containsKey("docs") ? this.get("$docs").get().toString() : "";
-            ScriptFunction<?> scriptFunction = new ScriptFunction<>(function, defaults, docs);
+            HashMap<String, ScriptObject<?>> defaults = new HashMap<>();
+            for (String key : this.data().keySet()) {
+                if (key.equals("lambda")) { continue; }
+                defaults.put(key, null);
+            }
+            String docs = this.get("$lambda.docs").get().toString();
+            if (docs == null) { docs = ""; }
+            ScriptFunction<?> scriptFunction = new ScriptFunction<>(function, new ScriptStructure(defaults), docs);
             this.supplier = () -> scriptFunction;
         } else if (this.type == Type.DATA && dataMap.containsKey("run")) { // if a "run" child exists, this is a function call structure
             this.type = Type.FUNCTION_CALL;
@@ -145,38 +150,48 @@ public class ScriptStructure implements ScriptObject<Object> {
 
         if (prefix == '$' && reference.length() == 1) {
             return switch (this.type) {
-                case FUNCTION_CALL -> () -> ScriptObject.of(this.supplier);
+                case FUNCTION_CALL -> () -> ScriptObject.of(this.supplier.get());
                 default -> () -> this;
             };
         } // If reference is just "$", return the structure itself
 
         String[] split = reference.substring(1).split("\\.");
-        if (this.type == Type.FUNCTION && this.argsSupplier != null && argsSupplier.get().containsKey(split[0])) {
-            return () -> argsSupplier.get().get(split[0]);
+        if (this.type == Type.LAMBDA && this.passedArgs != null && passedArgs.containsKey(split[0])) {
+            var arg = passedArgs.get(split[0]);
+            if (arg != null) { return () -> arg; }
         }
 
-        if (!this.data().containsKey(split[0])) { return null; } // If reference doesn't exist, return null
+        char finalPrefix = prefix;
+        String finalReference = reference;
+        return () -> {
 
-        var obj = this.data().get(split[0]);
-        if (obj instanceof ScriptStructure structure) { // Allows for indexing into structures such as "$data.structure.key" regardless of reference type
-            if (prefix == '@' && split.length == 1) {
-                MutableScriptObject mut = getSetter(split[0]);
-                return () -> mut;
+            if (!this.data().containsKey(split[0])) {
+                return null;
+            } // If reference doesn't exist, return null
+
+            var obj = this.data().get(split[0]);
+            if (obj instanceof ScriptStructure structure) { // Allows for indexing into structures such as "$data.structure.key" regardless of reference type
+                if (finalPrefix == '@' && split.length == 1) {
+                    MutableScriptObject mut = getSetter(split[0]);
+                    return mut;
+                }
+                if (split.length == 1) {
+                    return structure;
+                }
+                return structure.supplier(finalPrefix + finalReference.substring(split[0].length() + 2)).get();
             }
-            if (split.length == 1) { return () -> structure; }
-            return structure.supplier(prefix + reference.substring(split[0].length() + 2));
-        }
 
-        if (prefix == '$') { // Read-only reference
-            return switch (obj) {
-                // Allows for indexing into arrays such as "$data.array.0"
-                case ScriptArray array -> (split.length > 1 && Pattern.matches("\\d+", split[1])) ? () -> array.get(Integer.parseInt(split[1])) : () -> array;
-                default -> () -> obj;
-            };
-        } else { // Write-only reference
-            MutableScriptObject setterObject = getSetter(split[0]);
-            return () -> setterObject;
-        }
+            if (finalPrefix == '$') { // Read-only reference
+                return switch (obj) {
+                    // Allows for indexing into arrays such as "$data.array.0"
+                    case ScriptArray array ->
+                            (split.length > 1 && Pattern.matches("\\d+", split[1])) ? array.get(Integer.parseInt(split[1])) : array;
+                    default -> obj;
+                };
+            } else { // Write-only reference
+                return getSetter(split[0]);
+            }
+        };
     }
 
     private MutableScriptObject getSetter(String reference) {

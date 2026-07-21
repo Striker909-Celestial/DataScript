@@ -2,6 +2,7 @@
   <dictionary name="project">
     <words>
       <w>ftext</w>
+      <w>tostr</w>
     </words>
   </dictionary>
 </component>
