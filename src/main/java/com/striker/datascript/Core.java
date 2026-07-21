@@ -150,8 +150,20 @@ public class Core {
     }
 
     private static final ScriptFunction<ScriptBoolean> HASH_MATCHER = new ScriptFunction<>(
-            args -> new ScriptBoolean(args.get("a").hashCode() == args.get("b").hashCode()),
-            new ScriptStructure(Map.of("a", ScriptNumber.ZERO, "b", ScriptNumber.ZERO))
+            args -> {
+                var array = args.get("array");
+                if (array instanceof ScriptArray arr) {
+                    List<ScriptObject<?>> list = arr.get();
+                    if (list.size() <= 1) { return ScriptBoolean.TRUE; }
+                    int hash = list.get(0).hashCode();
+                    for (int i = 1; i < list.size(); i++) {
+                        if (list.get(i).hashCode() != hash) { return ScriptBoolean.FALSE; }
+                    }
+                    return ScriptBoolean.TRUE;
+                }
+                return ScriptBoolean.FALSE;
+            },
+            new ScriptStructure(Map.of("array", ScriptArray.EMPTY))
     );
 
     public static final Map<String, ScriptFunction<?>> CORE = Map.ofEntries(
