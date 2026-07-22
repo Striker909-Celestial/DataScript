@@ -29,6 +29,7 @@ public class ScriptStructure implements ScriptObject<Object> {
     }
 
     private final String path;
+    private final Function<String, Supplier<ScriptObject<?>>> rawContext;
     private final Function<String, Supplier<ScriptObject<?>>> context;
 
     private Type type = Type.DATA;
@@ -52,6 +53,7 @@ public class ScriptStructure implements ScriptObject<Object> {
         this.supplier = this.dataSupplier = () -> dataMap;
         this.path = path;
         // builds the contex for this structure
+        this.rawContext = context;
         this.context = (reference) -> {
             Supplier<ScriptObject<?>> supplier = Core.context(reference);
             if (supplier != null) { return supplier; }
@@ -65,11 +67,7 @@ public class ScriptStructure implements ScriptObject<Object> {
         }
 
         // the new context that is passed to script structures and strings that are children of this structure
-        Function<String, Supplier<ScriptObject<?>>> childContext = (reference) -> {
-            Supplier<ScriptObject<?>> supplier = this.supplier(reference);
-            if (supplier != null) { return supplier; }
-            return context.apply(reference);
-        };
+        Function<String, Supplier<ScriptObject<?>>> childContext = this::supplier;
         // loops through all entries in the input data
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             ScriptObject<?> value = switch (entry.getValue()) {
@@ -136,6 +134,7 @@ public class ScriptStructure implements ScriptObject<Object> {
         this.supplier = this.dataSupplier = () -> data;
         this.path = "";
         this.context = (reference) -> null;
+        this.rawContext = (reference) -> null;
     }
 
     /// An initializer for an empty instance of a ScriptStructure.
@@ -178,7 +177,7 @@ public class ScriptStructure implements ScriptObject<Object> {
         return () -> {
 
             if (!this.data().containsKey(split[0])) {
-                return null;
+                return this.rawContext.apply(finalReference).get();
             } // If reference doesn't exist, return null
 
             var obj = this.data().get(split[0]);

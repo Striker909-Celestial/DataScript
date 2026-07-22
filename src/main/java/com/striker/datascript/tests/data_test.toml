@@ -1,13 +1,6 @@
-[data.const]
-a = "hello"
-b = 3
-dict = { a = 9, b = 10 }
-array = [1, 2, 3, 4, 5]
-
-[data.var]
-range = { run.func = "$range", run.args = { end = 10 } }
-a = 1
+[data]
+a = "meow"
 b = 2
-c = 16
-d = -3
-e = "($a + $b) * $c"
+out = "$a * $b"
+_print.run.func = "$import.java.print"
+_print.run.args = { msg = "$out" }
