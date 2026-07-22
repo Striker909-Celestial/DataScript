@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /// A ScriptStructure is the core building block of a DataScript program. At its most basic level, a ScriptStrucure acts as a map of other [ScriptObject]s.
-/// However, a ScriptStructure can also act as an import block, a function definition, or a function call.
+/// However, a ScriptStructure can also act as a function definition or a function call.
 ///
 /// @author Striker-909
 /// @since v0.1.0
@@ -25,7 +25,6 @@ public class ScriptStructure implements ScriptObject<Object> {
         FUNCTION_CALL,
         LAMBDA,
         DATA,
-        IMPORT,
     }
 
     private final String path;
@@ -40,7 +39,7 @@ public class ScriptStructure implements ScriptObject<Object> {
     private ScriptArray privateArgs;
 
     /// A ScriptStructure is the core building block of a DataScript program. At its most basic level, a ScriptStrucure acts as a map of other [ScriptObject]s.
-    /// However, a ScriptStructure can also act as an import block, a function definition, or a function call.
+    /// However, a ScriptStructure can also act as a function definition or a function call.
     ///
     /// This initializer accepts a map of raw Java objects that are then converted into ScriptObjects.
     /// If any of the objects are maps, a ScriptStructure will be created from it in a recursive manner.
@@ -59,12 +58,6 @@ public class ScriptStructure implements ScriptObject<Object> {
             if (supplier != null) { return supplier; }
             return context.apply(reference);
         };
-
-        String[] splitPath = path.split("\\.");
-        if (splitPath.length >= 1 && splitPath[splitPath.length - 1].equals("import")) { // if the path ends with import, this is an import structure
-            this.type = Type.IMPORT;
-            //TODO: Implement imports
-        }
 
         // the new context that is passed to script structures and strings that are children of this structure
         Function<String, Supplier<ScriptObject<?>>> childContext = this::supplier;

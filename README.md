@@ -6,7 +6,7 @@ TOML will be used for all DataScript examples in this README, but DataScript can
 
 DataScript is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
 
-Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.4.0` on July 21st, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
+Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.5.1` on July 22nd, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
 
 ## DataScript Objects
 
@@ -222,7 +222,7 @@ Lambda structures can also be passed directly into function call structures in p
 
 ### Core Functions
 
-DataScript has 8 core functions. These functions can be referenced directly with a `$` and their name. They cannot be mutated with the `@` prefix. Even any data or function is given a name that matches a core function's name, the core function will override all references. These core functions fall into three main categories: transmutation, flow control, and data structure manipulation.
+DataScript has eight core functions. These functions can be referenced directly with a `$` and their name. They cannot be mutated with the `@` prefix. Even any data or function is given a name that matches a core function's name, the core function will override all references. These core functions fall into three main categories: transmutation, flow control, and data structure manipulation.
 
 #### Link
 
@@ -326,8 +326,55 @@ In, referenced with `$in`, checks if an array or structure includes a given item
 > 
 > **param** `matcher`: A function that tests if all items in an array match, returning a boolean. Uses hash codes by default.
 
+## Compilation
+
+DataScript is generally auto-compiling for single-file programs. This means that have a map from strings to objects (provided the types of all the objects in the map are supported by DataScript), merely creating a structure from that map will compile and run the program.
+
+```java
+Map<String, Object> rawData;
+// ...
+ScriptStructure structure = new ScriptStructure("root", rawData, s -> null);
+System.out.println(structure);
+```
+
+However, for more complex programs, the compiler is necessary to allow multiple files to interact and to allow files to reference java functions.
+
+### Compiler Builder
+
+The compiler builder is used to add all files and java functions to the compiler before the compiler is built, as no new files or functions can be added to the compiler once it is built. 
+
+```java
+// Example compiler build
+Compiler compiler = Compiler.builder()
+                .addFile("src/main/java/com/striker/datascript/tests/data_test.toml")
+                .addJavaFunction("print", new ScriptFunction<ScriptString>(
+                        a -> {
+                            System.out.println(a.get("msg").toString());
+                            return new ScriptString(a.get("msg").toString());
+                        },
+                        new ScriptStructure(Map.of("msg", ScriptString.EMPTY))
+                ))
+                .build();
+```
+
+### Imports
+
+The compiler enables files to use structures or functions from outside sources via imports. To import from another file, format the reference as follows:
+
+```toml
+data = "$import.OTHER_FILE_NAME.ITEM_PATH"
+```
+
+The `@` can be used for imports, but it is not recommended. To import a function that was passed to the compiler directly in java code, format the reference as follows:
+
+```toml
+func = "$import.java.FUNCTION_NAME"
+```
+
+### Running Functions
+
+The compiler also enables the fetching of data and running of functions from DataScript files. The `get` function will retrieve the item at a given path (no prefix) or reference. The `run` function will do the same as `get`, but if the retrieved item is a function it will run that function with the passed arguments and return the result
+
 ---
 
-> #### Last updated July 21st, 2026 for `v0.4.0`
-
-TODO: Imports, Imports from Java
+> #### Last updated July 22nd, 2026 for `v0.5.1`
