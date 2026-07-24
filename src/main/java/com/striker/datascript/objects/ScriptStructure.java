@@ -35,7 +35,7 @@ public class ScriptStructure implements ScriptObject<Object> {
     private Supplier<Map<String, ScriptObject<?>>> dataSupplier;
     private Supplier<?> supplier;
 
-    private Map<String, ScriptObject<?>> passedArgs;
+    private Supplier<Map<String, ScriptObject<?>>> passedArgs = Map::of;
     private ScriptArray privateArgs;
 
     /// A ScriptStructure is the core building block of a DataScript program. At its most basic level, a ScriptStrucure acts as a map of other [ScriptObject]s.
@@ -78,11 +78,14 @@ public class ScriptStructure implements ScriptObject<Object> {
 
         // If this structure contains a "lambda" child, it is a lambda function definition
         if (this.type == Type.DATA && dataMap.containsKey("lambda")) {
-            // defaults come from the args child structure if it exists
             this.type = Type.LAMBDA;
+            var lambda = dataMap.get("lambda");
+            if (!(lambda instanceof ScriptStructure)) { throw new IllegalArgumentException("Lambda function definition must have a structure as its 'lambda' child"); }
             Function<Map<String, ScriptObject<?>>, ScriptObject<?>> function = (args) -> {
-                passedArgs = args;
-                return this.supplier("$lambda.return").get();
+                Map<String, Object> newMap = new HashMap<>(data);
+                newMap.putAll(args);
+                ScriptStructure newStructure = new ScriptStructure(this.path, newMap, context);
+                return newStructure.get("$lambda.return");
             };
             HashMap<String, ScriptObject<?>> defaults = new HashMap<>();
             for (String key : this.data().keySet()) {
@@ -90,8 +93,8 @@ public class ScriptStructure implements ScriptObject<Object> {
                 defaults.put(key, null);
             }
 
-            String docs = this.get("$lambda.docs").get().toString();
-            if (docs == null) { docs = ""; }
+            ScriptObject<?> docsObj = this.get("$lambda.docs");
+            String docs = (docsObj == null) ? "" : this.get("$lambda.docs").get().toString();
 
             ScriptObject<?> priv = this.get("$lambda.private");
             if (priv instanceof ScriptArray array) { privateArgs = array; }
@@ -104,6 +107,9 @@ public class ScriptStructure implements ScriptObject<Object> {
             // the supplier will now supply the output of the function call
             this.supplier = () -> {
                 ScriptObject<?> func = this.get("$run.func");
+                if (func instanceof ScriptStructure structure) {
+                    func = ScriptObject.of(structure.get());
+                }
                 if (!(func instanceof ScriptFunction<?>)) {
                     throw new IllegalArgumentException("Function call structure must have a function as its 'func' child");
                 }
@@ -156,28 +162,19 @@ public class ScriptStructure implements ScriptObject<Object> {
         } // If reference is just "$", return the structure itself
 
         String[] split = reference.substring(1).split("\\.");
-        if (this.type == Type.LAMBDA &&
-                !split[0].equals("lambda") &&
-                this.passedArgs != null &&
-                passedArgs.containsKey(split[0]) &&
-                !this.privateArgs.get().contains(ScriptObject.of(split[0]))) {
-            var arg = passedArgs.get(split[0]);
-            if (arg != null) { return () -> arg; }
-        }
 
         char finalPrefix = prefix;
         String finalReference = reference;
         return () -> {
-
             if (!this.data().containsKey(split[0])) {
-                return this.rawContext.apply(finalReference).get();
+                var response = this.rawContext.apply(finalReference);
+                return (response == null) ? null : response.get();
             } // If reference doesn't exist, return null
 
             var obj = this.data().get(split[0]);
             if (obj instanceof ScriptStructure structure) { // Allows for indexing into structures such as "$data.structure.key" regardless of reference type
                 if (finalPrefix == '@' && split.length == 1) {
-                    MutableScriptObject mut = getSetter(split[0]);
-                    return mut;
+                    return getSetter(split[0]);
                 }
                 if (split.length == 1) {
                     return structure;

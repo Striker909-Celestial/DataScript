@@ -1,6 +1,10 @@
+[add]
+a = 0
+b = 0
+lambda.return = "$a + $b"
+
 [data]
-a = "meow"
+a = 4
 b = 2
-out = "$a * $b"
-_print.run.func = "$import.java.print"
-_print.run.args = { msg = "$out" }
+out = { run.func = "$add", run.args = { a = "$a", b = "$b" } }
+print = { run.func = "$import.java.print", run.args = { msg = "$out" } }
