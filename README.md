@@ -1,16 +1,16 @@
-## What is DataScript?
+## What is SMFL?
 
-DataScript is a minimal functional scripting language based off of canonical structured data files such as TOML, JSON, or YAML. It is written in Java and can interact with and use functions imported from Java. Functions can also be defined and called within data files, along with data objects that are used by functions.
+Striker's Minimal Functional Language (SMFL) is a minimal functional scripting language based off of canonical structured data files such as TOML, JSON, or YAML. It is written in Java and can interact with and use functions imported from Java. Functions can also be defined and called within data files, along with data objects that are used by functions.
 
-TOML will be used for all DataScript examples in this README, but DataScript can read from any file with a similar "maps in maps" style of hierarchy. 
+TOML will be used for all SMFL examples in this README, but SMFL can read from any file with a similar "maps in maps" style of hierarchy. 
 
-DataScript is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
+SMFL is not intended to be used as a standalone language, but instead as a supplement to Java. By itself, it only has basic arithmetic and flow abilities and no mechanism for input or output. It is instead designed to be used as snippets employed by a larger program that can be modified *without* recompilation, allowing for quick iteration or even on-the-fly code generation.
 
-Most importantly, this README is more of a concept layout than an actual description of DataScript's current functionality. As of `v0.5.1` on July 22nd, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, DataScript is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
+Most importantly, this README is more of a concept layout than an actual description of SMFL's current functionality. As of `v0.6.0` on July 24th, 2026, the code has many bugs and is still incomplete, although it does have some basic functionality. Additionally, SMFL is largely just a project to push my coding skills to their limits and prove to myself (and the computer science department at my college) that I am ready to move on to more advance topics.
 
-## DataScript Objects
+## SMFL Objects
 
-Data objects are the most straight-forward element of DataScript. On compilation, all values from key-value pairs are converted into a `ScriptObject` corresponding to their type. Integers and floats are converted to `ScriptNumber`, booleans are converted to `ScriptBoolean`, and lists are converted into `ScriptArray`. These are the "simple" objects that behave exactly as you would expect they would. The only slight wrinkle is that each element within a list will also be converted to a `ScriptObject` accordingly. Lists with different types of elements are supported.
+Data objects are the most straight-forward element of SMFL. On compilation, all values from key-value pairs are converted into a `ScriptObject` corresponding to their type. Integers and floats are converted to `ScriptNumber`, booleans are converted to `ScriptBoolean`, and lists are converted into `ScriptArray`. These are the "simple" objects that behave exactly as you would expect they would. The only slight wrinkle is that each element within a list will also be converted to a `ScriptObject` accordingly. Lists with different types of elements are supported.
 
 ```toml
 [data.ex1]
@@ -22,11 +22,11 @@ array = [1, [true, false]]    # ScriptArray(ScriptNumber(1), ScriptArray(ScriptB
 
 ### Structures
 
-Structures are DataScript's equivalent of maps. As their name implies, they make up the entire structure of code in DataScript. While they can simply act as a map of other data types (or other structures), they also are used both for function calls and function definition, which will be described in more detail in a later section.
+Structures are SMFL's equivalent of maps. As their name implies, they make up the entire structure of code in SMFL. While they can simply act as a map of other data types (or other structures), they also are used both for function calls and function definition, which will be described in more detail in a later section.
 
 ### Strings
 
-Two types are notably omitted from the "simple" category: Strings and Maps. Both are the driving forces behind what elevates DataScript from a file reader to an actual scripting language. Maps will be covered in a later section.
+Two types are notably omitted from the "simple" category: Strings and Maps. Both are the driving forces behind what elevates SMFL from a file reader to an actual scripting language. Maps will be covered in a later section.
 
 Strings serve three main purposes: they can store text, but they can also reference other pieces of data and perform calculations.
 
@@ -155,7 +155,7 @@ In addition to everything else they can do, strings can also be used for simple 
 
 ### Comparison Numbers
 
-All data objects in DataScript are assigned a comparison number to allow for easy comparison.
+All data objects in SMFL are assigned a comparison number to allow for easy comparison.
 
 - For numbers, the comparison number is just equal to the number itself.
 - For booleans, the comparison number is 1 if true, 0 if false.
@@ -167,7 +167,7 @@ All data objects in DataScript are assigned a comparison number to allow for eas
 
 Functions are, of course, the most important element of any functional programming language. Functions can be referenced just like any data type. This fact is key both to allowing functions to be called and allowing for the functional mainstay of passing functions as parameters for other functions. 
 
-Functions can be defined in-file, but they can also be imported from other DataScript files and from Java. The ability to import Java functions is crucial as it allows the two languages to interact and lends DataScript lots of missing functionality such as input, output, and file manipulation. DataScript does have a small set of core functions that do not need to be imported, but these are largely the bare minimum for flow control and processing.
+Functions can be defined in-file, but they can also be imported from other SMFL files and from Java. The ability to import Java functions is crucial as it allows the two languages to interact and lends SMFL lots of missing functionality such as input, output, and file manipulation. SMFL does have a small set of core functions that do not need to be imported, but these are largely the bare minimum for flow control and processing.
 
 ### Function Calls
 
@@ -222,7 +222,7 @@ Lambda structures can also be passed directly into function call structures in p
 
 ### Core Functions
 
-DataScript has eight core functions. These functions can be referenced directly with a `$` and their name. They cannot be mutated with the `@` prefix. Even any data or function is given a name that matches a core function's name, the core function will override all references. These core functions fall into three main categories: transmutation, flow control, and data structure manipulation.
+SMFL has eight core functions. These functions can be referenced directly with a `$` and their name. They cannot be mutated with the `@` prefix. Even any data or function is given a name that matches a core function's name, the core function will override all references. These core functions fall into three main categories: transmutation, flow control, and data structure manipulation.
 
 #### Link
 
@@ -256,7 +256,7 @@ To string, referenced with `$tostr`, returns the value of any object as a string
 
 #### If
 
-If, referenced with `$if`, is the most basic form of control flow in DataScript. It takes a boolean `condition` and two function references, `then` and `else`. If the condition is true, the `then` function will be run and its output returned. If not, the `else` function will be run and its output returned.
+If, referenced with `$if`, is the most basic form of control flow in SMFL. It takes a boolean `condition` and two function references, `then` and `else`. If the condition is true, the `then` function will be run and its output returned. If not, the `else` function will be run and its output returned.
 
 > **param** `condition`: A boolean condition.
 > 
@@ -328,7 +328,7 @@ In, referenced with `$in`, checks if an array or structure includes a given item
 
 ## Compilation
 
-DataScript is generally auto-compiling for single-file programs. This means that have a map from strings to objects (provided the types of all the objects in the map are supported by DataScript), merely creating a structure from that map will compile and run the program.
+SMFL is generally auto-compiling for single-file programs. This means that have a map from strings to objects (provided the types of all the objects in the map are supported by SMFL), merely creating a structure from that map will compile and run the program.
 
 ```java
 Map<String, Object> rawData;
@@ -373,8 +373,8 @@ func = "$import.java.FUNCTION_NAME"
 
 ### Running Functions
 
-The compiler also enables the fetching of data and running of functions from DataScript files. The `get` function will retrieve the item at a given path (no prefix) or reference. The `run` function will do the same as `get`, but if the retrieved item is a function it will run that function with the passed arguments and return the result
+The compiler also enables the fetching of data and running of functions from SMFL files. The `get` function will retrieve the item at a given path (no prefix) or reference. The `run` function will do the same as `get`, but if the retrieved item is a function it will run that function with the passed arguments and return the result
 
 ---
 
-> #### Last updated July 22nd, 2026 for `v0.5.1`
+> #### Last updated July 24th, 2026 for `v0.6.0`
